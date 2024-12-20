@@ -1,0 +1,102 @@
+{
+  "users": [
+    {
+      "ID_User": "USR00001",
+      "Nombre": "César",
+      "ApellidoP": "Reyes",
+      "ApellidoM": "Barrientos",
+      "Email": "cesar.correo.pruebas09@gmail.com",
+      "Telefono": "+524491234567",
+      "Contrasena": "$2b$10$c3wKiDmtvZIhsiqU1AypjuhgDgfYyg41//IOIsegFNohSTtADkQmC",
+      "imagen": "USR00001.jpeg",
+      "Biografia": "Tonto y bobo.",
+      "RedesSociales": [],
+      "TipoUsuario": "Consumidor",
+      "Estado": 1
+    },
+    {
+      "ID_User": "USR00002",
+      "Nombre": "Montse",
+      "ApellidoP": "Acosta",
+      "ApellidoM": "",
+      "Email": "montse@gmail.com",
+      "Telefono": "+524491234567",
+      "Contrasena": "$2b$10$aPXwHTMPREf3YeIjs7H3i.IqkJrR3FVJtUeF2bEt4j4GzWyDe25sy",
+      "imagen": "USR00002.png",
+      "Biografia": "Me gustan los gatos.",
+      "RedesSociales": [],
+      "TipoUsuario": "Chef Profesional",
+      "Estado": 1
+    },
+    {
+      "ID_User": "USR00003",
+      "Nombre": "Andrea",
+      "ApellidoP": "Reyes",
+      "ApellidoM": "Barrientos",
+      "Email": "andrea@gmail.com",
+      "Telefono": "+524491234567",
+      "Contrasena": "$2b$10$VwUr1BtVMhfU7zakSx8B7.KayT8qGHwgj8.oc7Ylc0KjUwAseAQyi",
+      "imagen": "icon-m.png",
+      "Biografia": "Si.",
+      "RedesSociales": [],
+      "TipoUsuario": "Chef Profesional",
+      "Estado": 1
+    },
+    {
+      "ID_User": "USR00004",
+      "Nombre": "Giselle",
+      "ApellidoP": "Vargas",
+      "ApellidoM": "Alvarado",
+      "Email": "gisellevargasalvarado@gmail.com",
+      "Telefono": "4581062929",
+      "Contrasena": "$2b$10$sAcAGDlO/.E6de0R8Wopqukfb7D20xASwSF7OhNQ0ZXNneh/YQLCO",
+      "imagen": "icon-m.png",
+      "Biografia": "Increible",
+      "RedesSociales": [],
+      "TipoUsuario": "Chef Aficionado",
+      "Estado": 1
+    },
+    {
+      "ID_User": "USR00005",
+      "Nombre": "Siomara",
+      "ApellidoP": "Saenz",
+      "ApellidoM": "",
+      "Email": "siomara@gmail.com",
+      "Telefono": "+12356789",
+      "Contrasena": "$2b$10$zep.4xkAcr.cnkfDM5KQPuUY9f0rZF2gEYjFcdeWyN7BOd7Oyau8C",
+      "imagen": "icon-m.png",
+      "Biografia": "I love sushi, sopes y costillas bbq",
+      "RedesSociales": [],
+      "TipoUsuario": "Chef Aficionado",
+      "Estado": 1
+    },
+    {
+      "ID_User": "USR00006",
+      "Nombre": "Anton",
+      "ApellidoP": "Ego",
+      "ApellidoM": "",
+      "Email": "Anton@ego.com",
+      "Telefono": "+524491234567",
+      "Contrasena": "$2b$10$Ck6WUPHQUqEM52QRtXClVu1YO/ZIc6Tha6tyvRuTy99RLj2U9lTu6",
+      "imagen": "user.png",
+      "Biografia": "En muchos sentidos, el trabajo de un crítico es fácil. Arriesgamos poco, ya que gozamos de una posición que está por encima de los que exponen su trabajo y a sí mismos a nuestro criterio",
+      "RedesSociales": [],
+      "TipoUsuario": "Critico",
+      "Estado": 1
+    },
+    {
+      "ID_User": "USR00007",
+      "Nombre": "Alejandro",
+      "ApellidoP": "Martínez",
+      "ApellidoM": "",
+      "Email": "alejandro.martinez.critico@gmail.com",
+      "Telefono": "4491234567",
+      "Contrasena": "$2b$10$Sde9SWo/xY.RZzAmYYHIU.FTAcnhz9xoxs80.xz4J7NIifSvl5LHm",
+      "imagen": "USR00007.png",
+      "Biografia": "Alejandro Martínez es un crítico gastronómico con más de 10 años de experiencia en la industria culinaria. Su pasión por la comida y su ojo detallado para evaluar sabores, presentación y técnica lo han convertido en una de las voces más respetadas del sector. A lo largo de su carrera, ha trabajado con restaurantes de prestigio y ha colaborado en diversas publicaciones gastronómicas.",
+      "RedesSociales": [],
+      "TipoUsuario": "Critico",
+      "Estado": 1
+    }
+  ]
+}

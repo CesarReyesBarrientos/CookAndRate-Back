@@ -1,0 +1,74 @@
+{
+  "interacciones": [
+    {
+      "ID_Interaccion": "INT00001",
+      "ID_Receta": "REC00003",
+      "ID_User": "USR00001",
+      "Tipo_Interaccion": "Me disgusta",
+      "Fecha_Interaccion": "2024-12-15T02:20:36.892Z"
+    },
+    {
+      "ID_Interaccion": "INT00002",
+      "ID_Receta": "REC00004",
+      "ID_User": "USR00001",
+      "Tipo_Interaccion": "Me disgusta",
+      "Fecha_Interaccion": "2024-12-15T02:22:23.207Z"
+    },
+    {
+      "ID_Interaccion": "INT00003",
+      "ID_Receta": "REC00004",
+      "ID_User": "USR00001",
+      "Tipo_Interaccion": "Me gusta",
+      "Fecha_Interaccion": "2024-12-15T02:22:25.745Z"
+    },
+    {
+      "ID_Interaccion": "INT00004",
+      "ID_Receta": "REC00004",
+      "ID_User": "USR00001",
+      "Tipo_Interaccion": "Me encanta",
+      "Fecha_Interaccion": "2024-12-15T02:22:27.164Z"
+    },
+    {
+      "ID_Interaccion": "INT00005",
+      "ID_Receta": "REC00004",
+      "ID_User": "USR00001",
+      "Tipo_Interaccion": "Me encanta",
+      "Fecha_Interaccion": "2024-12-15T02:30:39.111Z"
+    },
+    {
+      "ID_Interaccion": "INT00006",
+      "ID_Receta": "REC00004",
+      "ID_User": "USR00001",
+      "Tipo_Interaccion": "Me gusta",
+      "Fecha_Interaccion": "2024-12-15T02:30:40.913Z"
+    },
+    {
+      "ID_Interaccion": "INT00007",
+      "ID_Receta": "REC00004",
+      "ID_User": "USR00001",
+      "Tipo_Interaccion": "Me disgusta",
+      "Fecha_Interaccion": "2024-12-15T02:30:41.764Z"
+    },
+    {
+      "ID_Interaccion": "INT00008",
+      "ID_Receta": "REC00004",
+      "ID_User": "USR00001",
+      "Tipo_Interaccion": "Me encanta",
+      "Fecha_Interaccion": "2024-12-15T02:30:50.118Z"
+    },
+    {
+      "ID_Interaccion": "INT00009",
+      "ID_Receta": "REC00004",
+      "ID_User": "USR00001",
+      "Tipo_Interaccion": "Me gusta",
+      "Fecha_Interaccion": "2024-12-15T02:30:51.692Z"
+    },
+    {
+      "ID_Interaccion": "INT00010",
+      "ID_Receta": "REC00004",
+      "ID_User": "USR00001",
+      "Tipo_Interaccion": "Me disgusta",
+      "Fecha_Interaccion": "2024-12-15T02:30:53.117Z"
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "chefs": [
+    {
+      "ID_Chef": "CHF00001",
+      "ID_User": "USR00002",
+      "TipoChef": "Chef Profesional",
+      "Especialidades": [
+        "Comida Mexicana.",
+        "Comida para gatos."
+      ],
+      "Certificaciones": [
+        "Ingeniería en comida callejera."
+      ],
+      "RatingPromedio": 0,
+      "Seguidores": [
+        "USR00001"
+      ],
+      "Seguidos": []
+    },
+    {
+      "ID_Chef": "CHF00002",
+      "ID_User": "USR00003",
+      "TipoChef": "Chef Profesional",
+      "Especialidades": [
+        "90's"
+      ],
+      "Certificaciones": [
+        "ISC de locos"
+      ],
+      "RatingPromedio": 0,
+      "Seguidores": [
+        "USR00001",
+        "USR00007"
+      ],
+      "Seguidos": []
+    },
+    {
+      "ID_Chef": "CHF00003",
+      "ID_User": "USR00004",
+      "TipoChef": "Chef Aficionado",
+      "Especialidades": [
+        "Pastas"
+      ],
+      "Certificaciones": [],
+      "RatingPromedio": 0,
+      "Seguidores": [
+        "USR00001"
+      ],
+      "Seguidos": []
+    },
+    {
+      "ID_Chef": "CHF00004",
+      "ID_User": "USR00005",
+      "TipoChef": "Chef Aficionado",
+      "Especialidades": [
+        "Sushi"
+      ],
+      "Certificaciones": [],
+      "RatingPromedio": 0,
+      "Seguidores": [],
+      "Seguidos": []
+    }
+  ]
+}

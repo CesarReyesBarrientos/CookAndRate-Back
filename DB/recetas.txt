@@ -1,0 +1,210 @@
+{
+  "recetas": [
+    {
+      "ID_Receta": "REC00001",
+      "ID_Chef": "CHF00002",
+      "Titulo_Receta": "Spaghetti Carbonara",
+      "Ingredientes": {
+        "Spaghetti": "200g",
+        "Bacon": "100g",
+        "Egg": "2 units",
+        "Pecorino Cheese": "50g",
+        "Black Pepper": "to taste"
+      },
+      "Pasos_Elaboracion": [
+        "Boil the spaghetti until it is aldente.",
+        "Fry the bacon until it's crispy.",
+        "Beat the eggs with the cheese and pepper.",
+        "Mix the hot spaghetti with the bacon and beaten eggs.",
+        "Serve and enjoy."
+      ],
+      "Imagenes": [
+        "carbonara_inicio.jpg",
+        "carbonara_proceso.jpg",
+        "carbonara_terminada.jpg"
+      ],
+      "Interacciones": [
+        {
+          "ID_User": "USR00007",
+          "Tipo_Interaccion": "Me encanta",
+          "Fecha_Interaccion": "2024-12-16T05:43:25.632Z"
+        }
+      ],
+      "Rating": [
+        {
+          "ID_User": "USR00001",
+          "Calificacion": 3
+        }
+      ]
+    },
+    {
+      "ID_Receta": "REC00002",
+      "ID_Chef": "CHF00003",
+      "Titulo_Receta": "Tacos al Pastor",
+      "Ingredientes": {
+        "Pork meat": "500g",
+        "Pineapple": "100g",
+        "Tortillas": "10 pieces",
+        "Onion": "1 unit",
+        "Cilantro": "to taste",
+        "Sauce": "to taste"
+      },
+      "Pasos_Elaboracion": [
+        "Marinate the meat with achiote and spices.",
+        "Roast the meat together with the pineapple.",
+        "Cut the meat and pineapple into small pieces.",
+        "Place the meat on the tortillas and add onion, cilantro and sauce.",
+        "Serve hot."
+      ],
+      "Imagenes": [
+        "tacos_proceso.jpg",
+        "tacos_inicio.jpg",
+        "tacos_terminados.jpg"
+      ],
+      "Interacciones": [
+        {
+          "ID_User": "USR00002",
+          "Tipo_Interaccion": "Me gusta",
+          "Fecha_Interaccion": "2024-12-15T05:42:42.152Z"
+        },
+        {
+          "ID_User": "USR00002",
+          "Tipo_Interaccion": "Me encanta",
+          "Fecha_Interaccion": "2024-12-15T23:37:58.993Z"
+        }
+      ],
+      "Rating": []
+    },
+    {
+      "ID_Receta": "REC00003",
+      "ID_Chef": "CHF00002",
+      "Titulo_Receta": "Tomato soup",
+      "Ingredientes": {
+        "Tomatoes": "500g",
+        "Onion": "1 unit",
+        "Garlic": "2 cloves",
+        "Chicken Broth": "500ml",
+        "Cream": "to taste"
+      },
+      "Pasos_Elaboracion": [
+        "Sauté the chopped onion and garlic.",
+        "Add the chopped tomatoes and cook for 10 minutes.",
+        "Blend the mixture and strain it.",
+        "Add the chicken broth and cook for 5 more minutes.",
+        "Serve with cream to taste."
+      ],
+      "Imagenes": [
+        "sopa_inicio.webp",
+        "sopa_proceso.webp",
+        "sopa_terminada.jpeg"
+      ],
+      "Interacciones": [
+        {
+          "ID_User": "USR00002",
+          "Tipo_Interaccion": "Me encanta",
+          "Fecha_Interaccion": "2024-12-15T05:37:41.476Z"
+        },
+        {
+          "ID_User": "USR00002",
+          "Tipo_Interaccion": "Me gusta",
+          "Fecha_Interaccion": "2024-12-15T23:30:32.683Z"
+        },
+        {
+          "ID_User": "USR00001",
+          "Tipo_Interaccion": "Me encanta",
+          "Fecha_Interaccion": "2024-12-16T05:37:17.417Z"
+        }
+      ],
+      "Rating": [
+        {
+          "ID_User": "USR00001",
+          "Calificacion": 4
+        }
+      ]
+    },
+    {
+      "ID_Receta": "REC00004",
+      "ID_Chef": "CHF00001",
+      "Titulo_Receta": "Chocolate Brownies",
+      "Ingredientes": {
+        "Dark chocolate": "200g",
+        "Butter": "100g",
+        "Sugar": "150g",
+        "Egg": "3 units",
+        "Flour": "100g"
+      },
+      "Pasos_Elaboracion": [
+        "Melt the chocolate with the butter.",
+        "Add the sugar and mix well.",
+        "Add the eggs one by one.",
+        "Add the sifted flour and mix.",
+        "Bake at 180°C for 25 minutes."
+      ],
+      "Imagenes": [
+        "brownies_terminados.jpeg",
+        "brownies_inicio.webp",
+        "brownies_proceso.jpeg"
+      ],
+      "Interacciones": [
+        {
+          "ID_User": "USR00002",
+          "Tipo_Interaccion": "Me gusta",
+          "Fecha_Interaccion": "2024-12-15T05:39:02.209Z"
+        }
+      ],
+      "Rating": [
+        {
+          "ID_User": "USR00001",
+          "Calificacion": 5
+        },
+        {
+          "ID_User": "USR00006",
+          "Calificacion": 6
+        }
+      ]
+    },
+    {
+      "ID_Receta": "REC00005",
+      "ID_Chef": "CHF00001",
+      "Titulo_Receta": "Seafood Paella",
+      "Ingredientes": {
+        "Rice": "300g",
+        "Squid": "200g",
+        "Shrimp": "200g",
+        "Mussels": "100g",
+        "Fish Broth": "500ml",
+        "Saffron": "a pinch"
+      },
+      "Pasos_Elaboracion": [
+        "Sauté the seafood in a large frying pan.",
+        "Add the rice and sauté lightly.",
+        "Add the fish broth and saffron.",
+        "Cook over low heat until the rice is cooked.",
+        "Let rest 5 minutes before serving."
+      ],
+      "Imagenes": [
+        "paella_terminada.jpeg",
+        "paella_inicio.jpeg",
+        "paella_proceso.webp"
+      ],
+      "Interacciones": [
+        {
+          "ID_User": "USR00002",
+          "Tipo_Interaccion": "Me gusta",
+          "Fecha_Interaccion": "2024-12-15T05:39:16.078Z"
+        },
+        {
+          "ID_User": "USR00002",
+          "Tipo_Interaccion": "Me encanta",
+          "Fecha_Interaccion": "2024-12-15T05:39:16.902Z"
+        }
+      ],
+      "Rating": [
+        {
+          "ID_User": "USR00001",
+          "Calificacion": 3
+        }
+      ]
+    }
+  ]
+}

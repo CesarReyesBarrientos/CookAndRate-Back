@@ -1,0 +1,59 @@
+{
+    "anuncios": [
+        {
+            "Titulo": "El mejor café directo a tu mesa con Nescafé",
+            "NombrePromocionador": "Nescafé",
+            "ImagenPerfil": "nescafelogo.jpg",
+            "Contenido": "Descubre las nuevas variedades de café premium. Llévate tu taza favorita de regalo al realizar una compra en línea.",
+            "Imagenes": [
+                "nescafe_inicio.jpg",
+                "nescafe_promocion.webp",
+                "nescafe_regalo.jpg"
+            ]
+        },
+        {
+            "Titulo": "Utensilios de cocina en descuento - KitchenPro",
+            "NombrePromocionador": "KitchenPro",
+            "ImagenPerfil": "kitchenprologo.jpg",
+            "Contenido": "Equipa tu cocina con los mejores utensilios al mejor precio. Hasta 50% de descuento en sartenes, cuchillos y más.",
+            "Imagenes": [
+                "kitchenpro_inicio.jpg",
+                "kitchenpro_ofertas.webp",
+                "kitchenpro_set.png"
+            ]
+        },
+        {
+            "Titulo": "Sabores naturales con La Huerta",
+            "NombrePromocionador": "La Huerta",
+            "ImagenPerfil": "lahuertalogo.webp",
+            "Contenido": "Conserva lo mejor de la naturaleza en tu mesa. Descubre nuestra línea de frutas y vegetales congelados con sabor fresco y auténtico.",
+            "Imagenes": [
+                "lahuerta_frescos.jpg",
+                "lahuerta_congelados.webp",
+                "lahuerta_promo.jpg"
+            ]
+        },
+        {
+            "Titulo": "Crea magia en la cocina con ChefPro",
+            "NombrePromocionador": "ChefPro",
+            "ImagenPerfil": "chefprologo.png",
+            "Contenido": "Aprende de los mejores chefs con nuestras clases online. Inscríbete hoy y obtén un 20% de descuento en tu primer curso.",
+            "Imagenes": [
+                "chefpro_inicio.jpg",
+                "chefpro_clases.jpg",
+                "chefpro_descuento.jpg"
+            ]
+        },
+        {
+            "Titulo": "Más sabor, menos costo con SalsaMix",
+            "NombrePromocionador": "SalsaMix",
+            "ImagenPerfil": "salsamixlogo.jpg",
+            "Contenido": "Disfruta de nuestras deliciosas salsas artesanales. Compra tres y paga solo dos. Oferta válida en tiendas participantes.",
+            "Imagenes": [
+                "salsamix_inicio.jpg",
+                "salsamix_promocion.jpg",
+                "salsamix_variedad.jpg"
+            ]
+        }
+    ]
+}

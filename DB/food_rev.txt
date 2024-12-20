@@ -1,0 +1,34 @@
+{
+  "food_rev": [
+    {
+      "ID_Critico": "FRV00001",
+      "ID_User": "USR00001",
+      "TipoCritico": "Consumidor",
+      "Estudios": [],
+      "Seguidos": [
+        "USR00003",
+        "USR00004",
+        "USR00002"
+      ]
+    },
+    {
+      "ID_Critico": "FRV00002",
+      "ID_User": "USR00006",
+      "TipoCritico": "Critico",
+      "Estudios": [],
+      "Seguidos": []
+    },
+    {
+      "ID_Critico": "FRV00003",
+      "ID_User": "USR00007",
+      "TipoCritico": "Critico",
+      "Estudios": [
+        "Evaluación de maridaje de vinos y platos.",
+        "Crítica de restaurantes de alta cocina."
+      ],
+      "Seguidos": [
+        "USR00003"
+      ]
+    }
+  ]
+}
