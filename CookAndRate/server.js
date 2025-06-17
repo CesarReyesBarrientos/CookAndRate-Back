@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Configuración de la conexión a MySQL
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || '192.168.1.48',
+  host: process.env.DB_HOST || '192.168.1.15',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '243537',
   database: process.env.DB_NAME || 'CookAndRate',
@@ -133,6 +133,7 @@ app.get('/api/test-connection', async (req, res) => {
 
 // Ruta de login
 app.post('/login', async (req, res) => {
+  // console.log('Login request received:', req.body);
   try {
     const { email, password } = req.body;
     const [users] = await pool.query(
@@ -184,7 +185,10 @@ app.post('/find-user-by-id', async (req, res) => {
     if (user.Tipo_Usuario === 'chef') {
       const [chefs] = await pool.query('SELECT * FROM Chef WHERE ID_Usuario = ?', [userId]);
       responseData.chef = chefs[0];
-      responseData.icon = `${baseUrl}/img/userIcons/cheficon.jpg`;
+      // console.log('Imagen chef encontrado:', responseData.user);
+      responseData.icon = responseData.user.Imagen 
+          ? `${baseUrl}/img/userIcons/${responseData.user.Imagen}`
+          : `${baseUrl}/img/userIcons/cheficon.jpg`;
       
       // Obtener recetas del chef con sus imágenes
       const [recetas] = await pool.query(
@@ -213,7 +217,10 @@ app.post('/find-user-by-id', async (req, res) => {
     } else if (user.Tipo_Usuario === 'critico') {
       const [criticos] = await pool.query('SELECT * FROM Critico WHERE ID_Usuario = ?', [userId]);
       responseData.critico = criticos[0];
-      responseData.icon = `${baseUrl}/img/userIcons/crticon.png`;
+      console.log('Chef encontrado:', responseData.user);
+      responseData.icon = responseData.user.Imagen 
+          ? `${baseUrl}/img/userIcons/${responseData.user.Imagen}`
+          : `${baseUrl}/img/userIcons/crticon.jpg`;
       
       // Obtener certificaciones y especialidades del crítico
       const [certificaciones] = await pool.query('SELECT * FROM Certificacion_Critico WHERE ID_Critico = ?', [responseData.critico.ID_Critico]);
