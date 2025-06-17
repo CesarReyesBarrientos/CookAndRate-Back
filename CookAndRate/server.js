@@ -113,7 +113,6 @@ function createDefaultImages() {
 // Llamar la función al iniciar
 createDefaultImages();
 
-// Ruta de prueba de conexión
 app.get('/api/test-connection', async (req, res) => {
   try {
     const [results] = await pool.query('SELECT 1 as test');
@@ -133,7 +132,6 @@ app.get('/api/test-connection', async (req, res) => {
 
 // Ruta de login
 app.post('/login', async (req, res) => {
-  // console.log('Login request received:', req.body);
   try {
     const { email, password } = req.body;
     const [users] = await pool.query(
@@ -333,6 +331,54 @@ app.get('/top-3-recetas', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al obtener las recetas mejor calificadas'
+    });
+  }
+});
+
+// Recetas aleatorias
+// Ruta para obtener 10 recetas aleatorias
+app.get('/api/recetas-aleatorias', async (req, res) => {
+  try {
+    // Consulta para obtener 10 recetas aleatorias con información del chef
+    const query = `
+      SELECT 
+        r.*,
+        u.Nombre AS Chef_Nombre,
+        u.Ape_Pat AS Chef_Apellido,
+        u.imagen AS Chef_Imagen,
+        GROUP_CONCAT(f.URL) AS Imagenes
+      FROM Receta r
+      JOIN Chef c ON r.ID_Chef = c.ID_Chef
+      JOIN Usuario u ON c.ID_Usuario = u.ID_Usuario
+      LEFT JOIN Foto f ON r.ID_Receta = f.ID_Receta
+      GROUP BY r.ID_Receta
+      ORDER BY RAND()
+      LIMIT 10
+    `;
+
+    const [recetas] = await pool.query(query);
+
+    // Procesar los resultados
+    const resultados = recetas.map(receta => ({
+      ...receta,
+      Imagenes: receta.Imagenes ? receta.Imagenes.split(',') : [],
+      Chef: {
+        Nombre: receta.Chef_Nombre,
+        Apellido: receta.Chef_Apellido,
+        Imagen: receta.Chef_Imagen || 'default.png'
+      }
+    }));
+
+    res.json({
+      success: true,
+      recetas: resultados
+    });
+    console.log('Recetas aleatorias obtenidas correctamente', resultados);
+  } catch (error) {
+    console.error('Error al obtener recetas aleatorias:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener recetas'
     });
   }
 });
