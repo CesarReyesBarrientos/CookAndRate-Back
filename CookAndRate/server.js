@@ -17,7 +17,11 @@ app.use(express.json());
 const pool = mysql.createPool({
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   host: process.env.DB_HOST || '148.211.67.116',
+=======
+  host: process.env.DB_HOST || 'localhost',
+>>>>>>> Stashed changes
 =======
   host: process.env.DB_HOST || 'localhost',
 >>>>>>> Stashed changes
@@ -35,7 +39,11 @@ const pool = mysql.createPool({
 
 app.use('/images', express.static(path.join(__dirname, 'images')));
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
+=======
+
+>>>>>>> Stashed changes
 
 >>>>>>> Stashed changes
 
@@ -117,6 +125,7 @@ const uploadUserIcon = multer({
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 const uploadRecetaImage = multer({ 
   storage: recetasStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -126,6 +135,8 @@ const uploadRecetaImage = multer({
     } else {
       cb(new Error('Solo se permiten archivos de imagen'));
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 const upload = multer({
@@ -200,6 +211,9 @@ app.get('/api/test-connection', async (req, res) => {
     console.log('✅ Conexión exitosa a MySQL');
     res.json({
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -210,7 +224,12 @@ app.get('/api/test-connection', async (req, res) => {
   } catch (err) {
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     res.status(500).json({ 
+=======
+    console.error('❌ Error de conexión:', err.message);
+    res.status(500).json({
+>>>>>>> Stashed changes
 =======
     console.error('❌ Error de conexión:', err.message);
     res.status(500).json({
@@ -247,6 +266,7 @@ app.post('/login', async (req, res) => {
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         res.json({
           user: { ID_User: user.ID_User, Email: user.Email },
           message: "ACC",
@@ -258,6 +278,8 @@ app.post('/login', async (req, res) => {
     } else {
       res.status(200).json({ message: 'UNE' });
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
         const user = users[0];
@@ -1045,6 +1067,7 @@ app.get('/estadisticas-seguimiento/:userId', async (req, res) => {
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         // Consulta para contar seguidores (quienes siguen al usuario)
         const [seguidores] = await pool.query(
             `SELECT COUNT(*) AS totalSeguidores 
@@ -1075,6 +1098,8 @@ app.get('/estadisticas-seguimiento/:userId', async (req, res) => {
             success: false,
             message: 'Error al obtener estadísticas de seguimiento'
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 // ... (Tus require existentes, middlewares y configuración de MySQL) ...
@@ -1159,6 +1184,9 @@ app.get('/read-recetas', async (req, res) => {
             success: false,
             error: 'Error al obtener recetas'
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -1166,6 +1194,7 @@ app.get('/read-recetas', async (req, res) => {
     }
 });
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 // Ruta para verificar si el email ya existe
@@ -1530,6 +1559,8 @@ app.post('/create-recipe', uploadRecetaImgs.array('imagenes', 10), async (req, r
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 
 
 // Obtener todos los chefs
@@ -1730,6 +1761,9 @@ app.post('/create-recipe', uploadRecipeImage.single('imagen_receta'), async (req
 app.use('/recipeImages', express.static(path.join(__dirname, 'recipeImages')));
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
