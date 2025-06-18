@@ -8,16 +8,20 @@ const fs = require('fs');
 const multer = require('multer');
 
 const app = express();
-
+app.use('/userIcons', express.static(path.join(__dirname, 'userIcons')));
 // Middlewares
 app.use(cors());
 app.use(express.json());
 
 // Configuración de la conexión a MySQL
 const pool = mysql.createPool({
+<<<<<<< Updated upstream
   host: process.env.DB_HOST || '148.211.67.116',
+=======
+  host: process.env.DB_HOST || 'localhost',
+>>>>>>> Stashed changes
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '243537',
+  password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'CookAndRate',
   port: process.env.DB_PORT || 3306,
   waitForConnections: true,
@@ -25,10 +29,13 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 
 
 
+
+<<<<<<< Updated upstream
 // Configuración de directorios de imágenes
 const imgDir = path.join(__dirname, 'img');
 const userIconsDir = path.join(imgDir, 'userIcons');
@@ -39,6 +46,23 @@ const recetasDir = path.join(imgDir, 'recetas');
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
+=======
+app.get('/api/list-images', (req, res) => {
+    fs.readdir(userIconsDir, (err, files) => {
+        if (err) {
+            res.status(500).json({ error: 'No se puede leer el directorio' });
+        } else {
+            const images = files.filter(file =>
+                /\.(jpg|jpeg|png|gif|webp)$/i.test(file)
+            );
+            res.json({
+                directory: userIconsDir,
+                images: images,
+                totalFiles: files.length
+            });
+        }
+    });
+>>>>>>> Stashed changes
 });
 
 // Middleware para servir imágenes estáticas
@@ -83,6 +107,7 @@ const uploadUserIcon = multer({
   }
 });
 
+<<<<<<< Updated upstream
 const uploadRecetaImage = multer({ 
   storage: recetasStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
@@ -91,12 +116,26 @@ const uploadRecetaImage = multer({
       cb(null, true);
     } else {
       cb(new Error('Solo se permiten archivos de imagen'));
+=======
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB máximo
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Solo se permiten archivos de imagen'));
+        }
+>>>>>>> Stashed changes
     }
   }
 });
 
 // Función para crear imágenes por defecto
 function createDefaultImages() {
+<<<<<<< Updated upstream
   const defaultChefIcon = path.join(userIconsDir, 'cheficon.jpg');
   const defaultCriticIcon = path.join(userIconsDir, 'crticon.png');
   const defaultRecipeImage = path.join(recetasDir, 'default-recipe.jpg');
@@ -111,6 +150,22 @@ function createDefaultImages() {
     console.log('⚠️ crticon.png no existe - creando imagen por defecto');
     // Aquí podrías copiar una imagen por defecto o crearla
   }
+=======
+    const defaultChefIcon = path.join(userIconsDir, 'cheficon.jpg');
+    const defaultCriticIcon = path.join(userIconsDir, 'crticon.png');
+
+    // Verificar si existen las imágenes por defecto
+    if (!fs.existsSync(defaultChefIcon)) {
+        console.log('⚠️  cheficon.jpg no existe');
+        // Aquí podrías copiar una imagen por defecto o crearla
+    }
+
+    if (!fs.existsSync(defaultCriticIcon)) {
+        console.log('⚠️  crticon.png no existe');
+        // Aquí podrías copiar una imagen por defecto o crearla
+    }
+}
+>>>>>>> Stashed changes
 
   if (!fs.existsSync(defaultRecipeImage)) {
     console.log('⚠️ default-recipe.jpg no existe - creando imagen por defecto');
@@ -122,15 +177,29 @@ const uploadRecetaImgs = multer({ storage: recetasStorage });
 createDefaultImages();
 
 app.get('/api/test-connection', async (req, res) => {
+<<<<<<< Updated upstream
   try {
     const [results] = await pool.query('SELECT 1 as test');
     res.json({ 
+=======
+  console.log('📡 Intentando conectar a la base de datos...');
+
+  try {
+    const [results] = await pool.query('SELECT 1 as test');
+    console.log('✅ Conexión exitosa a MySQL');
+    res.json({
+>>>>>>> Stashed changes
       status: 'success',
       message: 'Conexión exitosa a MySQL',
       timestamp: new Date().toISOString()
     });
   } catch (err) {
+<<<<<<< Updated upstream
     res.status(500).json({ 
+=======
+    console.error('❌ Error de conexión:', err.message);
+    res.status(500).json({
+>>>>>>> Stashed changes
       status: 'error',
       message: 'No se puede conectar a la base de datos',
       details: err.message
@@ -157,6 +226,7 @@ app.post('/login', async (req, res) => {
           { expiresIn: '8h' }
         );
 
+<<<<<<< Updated upstream
         res.json({
           user: { ID_User: user.ID_User, Email: user.Email },
           message: "ACC",
@@ -167,6 +237,38 @@ app.post('/login', async (req, res) => {
       }
     } else {
       res.status(200).json({ message: 'UNE' });
+=======
+        const user = users[0];
+
+        if (user && user.Estado === 1) {
+            if (password === user.Contrasena) {
+                const token = jwt.sign(
+                    {
+                        userId: user.ID_User,
+                        email: user.Email
+                    },
+                    process.env.JWT_SECRET || 'd4e8b87547fe0d3a8ba82cbfd02bb11e0b7d34554b383ced776fe215eec9e849',
+                    { expiresIn: '8h' }
+                );
+
+                res.json({
+                    user: {
+                        ID_User: user.ID_User,
+                        Email: user.Email
+                    },
+                    message: "ACC",
+                    token
+                });
+            } else {
+                res.status(200).json({ message: 'COI' });
+            }
+        } else {
+            res.status(200).json({ message: 'UNE' });
+        }
+    } catch (error) {
+        console.error('Error en login:', error);
+        res.status(500).json({ error: error.message });
+>>>>>>> Stashed changes
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -175,12 +277,121 @@ app.post('/login', async (req, res) => {
 
 // Ruta para encontrar usuario por ID
 app.post('/find-user-by-id', async (req, res) => {
+<<<<<<< Updated upstream
   try {
     const { userId } = req.body;
     const [users] = await pool.query('SELECT * FROM Usuario WHERE ID_Usuario = ?', [userId]);
 
     if (users.length === 0) {
       return res.status(404).json({ error: 'Usuario no encontrado' });
+=======
+    try {
+        const { userId } = req.body;
+
+        const [users] = await pool.query(
+            'SELECT * FROM Usuario WHERE ID_Usuario = ?',
+            [userId]
+        );
+
+        if (users.length === 0) {
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+
+        const user = users[0];
+        const responseData = { user };
+
+        // Obtener la URL base del servidor
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+        // console.log('Usuario encontrado:', user);
+
+        if (user.Tipo_Usuario === 'chef') {
+            const [chefs] = await pool.query(
+                'SELECT * FROM Chef WHERE ID_Usuario = ?',
+                [userId]
+            );
+            responseData.chef = chefs[0];
+
+            // Verificar si la imagen existe antes de asignarla
+            const chefIconPath = path.join(userIconsDir, 'cheficon.jpg');
+            if (fs.existsSync(chefIconPath)) {
+                responseData.icon = `${baseUrl}/userIcons/cheficon.jpg`;
+                console.log('✅ Imagen de chef asignada:', responseData.icon);
+            } else {
+                responseData.icon = null;
+                console.log('❌ cheficon.jpg no existe');
+            }
+
+            console.log('Chef encontrado:', responseData.chef);
+
+            // Obtener recetas del chef
+            const [recetas] = await pool.query(
+                'SELECT * FROM Receta WHERE ID_Chef = ?',
+                [responseData.chef.ID_Chef]
+            );
+            responseData.recetas = recetas;
+
+            // Obtener certificaciones del chef
+            const [certificaciones] = await pool.query(
+                'SELECT * FROM Certificacion_Chef WHERE ID_Chef = ?',
+                [responseData.chef.ID_Chef]
+            );
+            responseData.certificaciones = certificaciones;
+
+            // Obtener especialidades del chef
+            const [especialidades] = await pool.query(
+                'SELECT * FROM Especialidad_Chef WHERE ID_Chef = ?',
+                [responseData.chef.ID_Chef]
+            );
+            responseData.especialidades = especialidades;
+
+        } else if (user.Tipo_Usuario === 'critico') {
+            const [criticos] = await pool.query(
+                'SELECT * FROM Critico WHERE ID_Usuario = ?',
+                [userId]
+            );
+            responseData.critico = criticos[0];
+
+            // Verificar si la imagen existe antes de asignarla
+            const criticIconPath = path.join(userIconsDir, 'crticon.png');
+            if (fs.existsSync(criticIconPath)) {
+                responseData.icon = `${baseUrl}/userIcons/crticon.png`;
+                console.log('✅ Imagen de crítico asignada:', responseData.icon);
+            } else {
+                responseData.icon = null;
+                console.log('❌ crticon.png no existe');
+            }
+
+            console.log('Crítico encontrado:', responseData.critico);
+
+            // Obtener certificaciones del crítico
+            const [certificaciones] = await pool.query(
+                'SELECT * FROM Certificacion_Critico WHERE ID_Critico = ?',
+                [responseData.critico.ID_Critico]
+            );
+            responseData.certificaciones = certificaciones;
+
+            // Obtener especialidades del crítico
+            const [especialidades] = await pool.query(
+                'SELECT * FROM Especialidad_Critico WHERE ID_Critico = ?',
+                [responseData.critico.ID_Critico]
+            );
+            responseData.especialidades = especialidades;
+        }
+
+        // Obtener redes sociales
+        const [redesSociales] = await pool.query(
+            'SELECT * FROM Red_Social WHERE ID_Usuario = ?',
+            [userId]
+        );
+        responseData.redesSociales = redesSociales;
+
+        res.json(responseData);
+        console.log('Datos del usuario enviados - Icon:', responseData.icon);
+    } catch (error) {
+        console.error('Error al buscar usuario:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+>>>>>>> Stashed changes
     }
 
     const user = users[0];
@@ -246,10 +457,41 @@ app.post('/find-user-by-id', async (req, res) => {
 });
 
 // Ruta para subir imagen de usuario
+<<<<<<< Updated upstream
 app.post('/api/upload-user-icon', uploadUserIcon.single('userIcon'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No se subió ningún archivo' });
+=======
+app.post('/api/upload-user-icon', upload.single('userIcon'), async (req, res) => {
+    console.log('Hola gay');
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No se subió ningún archivo' });
+        }
+
+        const { userId } = req.body;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
+        const imageUrl = `${baseUrl}/userIcons/${req.file.filename}`;
+
+        console.log('Imagen subida:', req.file.filename);
+        console.log('URL generada:', imageUrl);
+
+        // await pool.query(
+        //     'UPDATE Usuario SET Imagen_Perfil = ? WHERE ID_Usuario = ?',
+        //     [imageUrl, userId]
+        // );
+
+        res.json({
+            success: true,
+            imageUrl: imageUrl,
+            filename: req.file.filename,
+            message: 'Imagen subida correctamente'
+        });
+    } catch (error) {
+        console.error('Error al subir imagen:', error);
+        res.status(500).json({ error: 'Error al subir la imagen' });
+>>>>>>> Stashed changes
     }
 
     const { userId } = req.body;
@@ -301,6 +543,7 @@ app.post('/api/upload-receta-image', uploadRecetaImage.single('recetaImage'), as
 
 // Top 3 recetas más valoradas
 app.get('/top-3-recetas', async (req, res) => {
+<<<<<<< Updated upstream
   try {
     const query = `
       SELECT 
@@ -330,6 +573,37 @@ app.get('/top-3-recetas', async (req, res) => {
       ORDER BY Puntuacion_Promedio DESC
       LIMIT 3;
     `;
+=======
+    try {
+        const query = `
+            SELECT
+                r.ID_Receta,
+                r.Titulo AS Nombre,
+                r.Descripcion,
+                r.Tiempo_Preparacion,
+                r.Dificultad,
+                f.URL AS Imagen,
+                AVG(c.Calificacion) AS Puntuacion_Promedio,
+                u.Nombre AS Chef_Nombre,
+                u.Ape_Pat AS Chef_Apellido
+            FROM Receta r
+            LEFT JOIN Calificacion c ON r.ID_Receta = c.ID_Receta
+            LEFT JOIN Foto f ON r.ID_Receta = f.ID_Receta
+            LEFT JOIN Chef ch ON r.ID_Chef = ch.ID_Chef
+            LEFT JOIN Usuario u ON ch.ID_Usuario = u.ID_Usuario
+            GROUP BY
+                r.ID_Receta,
+                r.Titulo,
+                r.Descripcion,
+                r.Tiempo_Preparacion,
+                r.Dificultad,
+                f.URL,
+                u.Nombre,
+                u.Ape_Pat
+            ORDER BY Puntuacion_Promedio DESC
+            LIMIT 3;
+        `;
+>>>>>>> Stashed changes
 
     const [recetas] = await pool.query(query);
     const baseUrl = `${req.protocol}://${req.get('host')}`;
@@ -747,6 +1021,7 @@ app.get('/estadisticas-seguimiento/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
 
+<<<<<<< Updated upstream
         // Consulta para contar seguidores (quienes siguen al usuario)
         const [seguidores] = await pool.query(
             `SELECT COUNT(*) AS totalSeguidores 
@@ -776,10 +1051,94 @@ app.get('/estadisticas-seguimiento/:userId', async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error al obtener estadísticas de seguimiento'
+=======
+// ... (Tus require existentes, middlewares y configuración de MySQL) ...
+
+const recipeImagesDir = path.join(__dirname, 'recipeImages'); // Nuevo directorio para imágenes de recetas
+
+// Asegúrate de que el directorio de imágenes de recetas exista
+if (!fs.existsSync(recipeImagesDir)) {
+    fs.mkdirSync(recipeImagesDir, { recursive: true });
+}
+
+// Configuración de Multer para subir imágenes de recetas
+const recipeStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, recipeImagesDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+    }
+});
+
+const uploadRecipeImage = multer({
+    storage: recipeStorage,
+    limits: {
+        fileSize: 10 * 1024 * 1024 // 10MB máximo para imágenes de recetas
+    },
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Solo se permiten archivos de imagen para recetas'));
+        }
+    }
+});
+
+// ... (Tus rutas existentes: /api/list-images, /api/test-connection, /login, /find-user-by-id, etc.) ...
+
+app.get('/read-recetas', async (req, res) => {
+    try {
+        // Obtener recetas básicas
+        const [recetas] = await pool.query(`
+            SELECT
+                r.ID_Receta,
+                r.Titulo,
+                r.Descripcion,
+                r.Tiempo_Preparacion,
+                r.Dificultad,
+                r.Fecha_Publicacion,
+                r.ID_Chef
+            FROM Receta r
+            ORDER BY r.Fecha_Publicacion DESC
+        `);
+
+        // Obtener todas las fotos en una sola consulta
+        const [fotos] = await pool.query(`
+            SELECT f.ID_Receta, f.URL
+            FROM Foto f
+            WHERE f.ID_Receta IN (SELECT ID_Receta FROM Receta)
+        `);
+
+        // Combinar recetas con sus fotos
+        const recetasConFotos = recetas.map(receta => {
+            const fotosReceta = fotos
+                .filter(foto => foto.ID_Receta === receta.ID_Receta)
+                .map(foto => ({ URL: foto.URL }));
+
+            return {
+                ...receta,
+                fotos: fotosReceta.length > 0 ? fotosReceta : []
+            };
+        });
+
+        res.json({
+            success: true,
+            recetas: recetasConFotos
+        });
+
+    } catch (error) {
+        console.error('Error al obtener recetas:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Error al obtener recetas'
+>>>>>>> Stashed changes
         });
     }
 });
 
+<<<<<<< Updated upstream
 // Ruta para verificar si el email ya existe
 app.post('/checkEmail', async (req, res) => {
   console.log('checkEmail endpoint hit');
@@ -1139,6 +1498,207 @@ app.post('/create-recipe', uploadRecetaImgs.array('imagenes', 10), async (req, r
     connection.release();
   }
 });
+=======
+
+
+// Obtener todos los chefs
+app.get('/read-chefs', async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                c.ID_Chef,
+                c.Tipo,
+                c.Rating_Promedio,
+                u.ID_Usuario,
+                u.Nombre,
+                u.Ape_Pat,
+                u.Ape_Mat,
+                u.Biografia,
+                u.Email,
+                u.Imagen
+            FROM Chef c
+            JOIN Usuario u ON c.ID_Usuario = u.ID_Usuario
+        `;
+
+        const [chefs] = await pool.query(query);
+
+        res.json({ chefs });
+    } catch (error) {
+        console.error('Error al obtener chefs:', error);
+        res.status(500).json({ error: 'Error interno al leer chefs' });
+    }
+});
+
+// Obtener todos los críticos
+app.get('/read-food-critics', async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                cr.ID_Critico,
+                cr.Tipo,
+                u.ID_Usuario,
+                u.Nombre,
+                u.Ape_Pat,
+                u.Ape_Mat,
+                u.Biografia,
+                u.Email
+            FROM Critico cr
+            JOIN Usuario u ON cr.ID_Usuario = u.ID_Usuario
+        `;
+
+        const [criticos] = await pool.query(query);
+
+        res.json({ food_critics: criticos });
+    } catch (error) {
+        console.error('Error al obtener críticos:', error);
+        res.status(500).json({ error: 'Error interno al leer críticos' });
+    }
+});
+
+// Obtener todos los usuarios
+app.get('/read-users', async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                ID_Usuario,
+                Nombre,
+                Ape_Pat,
+                Ape_Mat,
+                Email,
+                Fecha_Registro,
+                Estado,
+                Tipo_Usuario,
+                Biografia,
+                Imagen
+            FROM Usuario
+        `;
+
+        const [usuarios] = await pool.query(query);
+
+        res.json({ users: usuarios });
+    } catch (error) {
+        console.error('Error al obtener usuarios:', error);
+        res.status(500).json({ error: 'Error interno al leer usuarios' });
+    }
+});
+
+app.post('/update-user', (req, res, next) => {
+  const uploadMiddleware = upload.single('imagen');
+
+  uploadMiddleware(req, res, async (err) => {
+    if (err) {
+      console.error('❌ Error al subir imagen:', err.message);
+      return res.status(500).json({ success: false, error: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
+  try {
+    const { userId, email, nombre, Ape_Pat, Ape_Mat, biografia } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Falta el ID de usuario.' });
+    }
+
+    const [usuarios] = await pool.query('SELECT * FROM Usuario WHERE ID_Usuario = ?', [userId]);
+    if (usuarios.length === 0) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
+    }
+
+    const user = usuarios[0];
+
+    const campos = [];
+    const valores = [];
+
+    if (nombre) { campos.push('Nombre = ?'); valores.push(nombre); }
+    if (Ape_Pat) { campos.push('Ape_Pat = ?'); valores.push(Ape_Pat); }
+    if (Ape_Mat) { campos.push('Ape_Mat = ?'); valores.push(Ape_Mat); }
+    if (email)   { campos.push('Email = ?'); valores.push(email); }
+    if (biografia) { campos.push('Biografia = ?'); valores.push(biografia); }
+
+    if (req.file) {
+      campos.push('Imagen = ?');
+      valores.push(req.file.filename);
+    }
+
+    valores.push(userId);
+
+    if (campos.length === 0) {
+      return res.status(400).json({ success: false, message: 'No hay campos para actualizar.' });
+    }
+
+    const query = `UPDATE Usuario SET ${campos.join(', ')} WHERE ID_Usuario = ?`;
+    await pool.query(query, valores);
+
+    const [updated] = await pool.query('SELECT * FROM Usuario WHERE ID_Usuario = ?', [userId]);
+
+    res.json({ success: true, message: 'Usuario actualizado correctamente', user: updated[0] });
+
+  } catch (error) {
+    console.error('❌ Error en /update-user:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/create-recipe', uploadRecipeImage.single('imagen_receta'), async (req, res) => {
+    try {
+        const {
+            nombre,
+            descripcion,
+            ingredientes,
+            instrucciones,
+            categoria,
+            tiempo_preparacion,
+            tiempo_coccion,
+            porciones,
+            id_chef // Asumo que este ID viene del cliente o del token JWT
+        } = req.body;
+
+        // Validar datos básicos
+        if (!nombre || !descripcion || !ingredientes || !instrucciones || !categoria || !tiempo_preparacion || !tiempo_coccion || !porciones || !id_chef) {
+            return res.status(400).json({ success: false, message: 'Faltan campos obligatorios para la receta.' });
+        }
+
+        let imageUrl = null;
+        if (req.file) {
+            const baseUrl = `${req.protocol}://${req.get('host')}`;
+            imageUrl = `${baseUrl}/recipeImages/${req.file.filename}`; // Usamos /recipeImages/
+            console.log('Imagen de receta subida:', req.file.filename);
+            console.log('URL generada para imagen de receta:', imageUrl);
+        }
+
+        // Insertar la receta en la tabla 'Receta'
+        const [result] = await pool.query(
+            `INSERT INTO Receta (Titulo, Descripcion, Ingredientes, Instrucciones, Categoria, Tiempo_Preparacion, Tiempo_Coccion, Porciones, Fecha_Publicacion, ID_Chef)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
+            [nombre, descripcion, ingredientes, instrucciones, categoria, tiempo_preparacion, tiempo_coccion, porciones, id_chef]
+        );
+
+        const newRecipeId = result.insertId;
+
+        // Si hay una imagen, insertarla en la tabla 'Foto'
+        if (imageUrl) {
+            await pool.query(
+                `INSERT INTO Foto (ID_Receta, URL) VALUES (?, ?)`,
+                [newRecipeId, imageUrl]
+            );
+        }
+
+        res.status(201).json({
+            success: true,
+            message: 'Receta creada exitosamente',
+            recipeId: newRecipeId,
+            imageUrl: imageUrl
+        });
+
+    } catch (error) {
+        console.error('Error al crear la receta:', error);
+        res.status(500).json({ success: false, error: 'Error interno del servidor al crear la receta', details: error.message });
+    }
+});
+app.use('/recipeImages', express.static(path.join(__dirname, 'recipeImages')));
+
+>>>>>>> Stashed changes
 
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
