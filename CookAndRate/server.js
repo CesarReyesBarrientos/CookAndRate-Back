@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Configuración de la conexión a MySQL
 const pool = mysql.createPool({
-  host: process.env.DB_HOST || '192.168.1.15',
+  host: process.env.DB_HOST || '148.211.67.116',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '243537',
   database: process.env.DB_NAME || 'CookAndRate',
@@ -24,6 +24,10 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0
 });
+
+
+
+
 
 // Configuración de directorios de imágenes
 const imgDir = path.join(__dirname, 'img');
@@ -1007,76 +1011,132 @@ app.post('/deactivate-account', async (req, res) => {
 });
 
 
-app.post('/api/create-recipe', uploadRecetaImgs.array('imagenes', 10), async (req, res) => {
+app.post('/create-recipe', uploadRecetaImgs.array('imagenes', 10), async (req, res) => {
+  const connection = await pool.getConnection();
+  await connection.beginTransaction();
+
   try {
-    const { descripcion, dificultad, ingredientes, pasos, tiempoPreparacion, titulo } = req.body;
-    const imagenes = req.files;
-    const chefId = 'CHF-0015'; // En producción obtén esto del usuario autenticado
+    // Obtener datos del formulario
+    const { 
+      titulo, 
+      descripcion, 
+      tiempoPreparacion, 
+      dificultad,
+      ingredientes: ingredientesStr,
+      pasos: pasosStr,
+      userId
+    } = req.body;
+
+    // Parsear ingredientes y pasos
+    const ingredientes = typeof ingredientesStr === 'string' ? 
+      JSON.parse(ingredientesStr) : ingredientesStr;
+    const pasos = typeof pasosStr === 'string' ? 
+      JSON.parse(pasosStr) : pasosStr;
+
+    // Validar datos
+    if (!titulo || !descripcion || !userId) {
+      throw new Error('Faltan campos requeridos');
+    }
+
+    // Obtener ID del chef
+    const [chef] = await connection.query(
+      'SELECT ID_Chef FROM Chef WHERE ID_Usuario = ?', 
+      [userId]
+    );
+    
+    if (!chef || chef.length === 0) {
+      throw new Error('El usuario no tiene perfil de chef');
+    }
+
+    const chefId = chef[0].ID_Chef;
     const fechaPublicacion = new Date().toISOString().split('T')[0];
 
-    // Convertir JSON si vienen como strings
-    const ingredientesParsed = typeof ingredientes === 'string' ? JSON.parse(ingredientes) : ingredientes;
-    const pasosParsed = typeof pasos === 'string' ? JSON.parse(pasos) : pasos;
-
-    // Obtener nuevo ID de receta
-    const [lastReceta] = await db.query(`SELECT ID_Receta FROM Receta ORDER BY ID_Receta DESC LIMIT 1`);
-    const nextRecetaNum = lastReceta.length ? parseInt(lastReceta[0].ID_Receta.split('-')[1]) + 1 : 1;
+    // Generar ID de receta
+    const [lastReceta] = await connection.query(
+      'SELECT ID_Receta FROM Receta ORDER BY ID_Receta DESC LIMIT 1'
+    );
+    const nextRecetaNum = lastReceta.length ? 
+      parseInt(lastReceta[0].ID_Receta.split('-')[1]) + 1 : 1;
     const recetaId = `REC-${String(nextRecetaNum).padStart(4, '0')}`;
-    console.log(`📝 Nuevo ID de Receta: ${recetaId}`);
 
     // Insertar Receta
-    await db.query(`
-      INSERT INTO Receta (ID_Receta, ID_Chef, Titulo, Descripcion, Tiempo_Preparacion, Dificultad, Fecha_Publicacion)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [recetaId, chefId, titulo, descripcion, tiempoPreparacion, dificultad, fechaPublicacion]);
-
-    console.log('✅ Receta insertada');
+    await connection.query(
+      `INSERT INTO Receta 
+       (ID_Receta, ID_Chef, Titulo, Descripcion, Tiempo_Preparacion, Dificultad, Fecha_Publicacion)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [recetaId, chefId, titulo, descripcion, tiempoPreparacion, dificultad, fechaPublicacion]
+    );
 
     // Insertar Ingredientes
-    const [lastIng] = await db.query(`SELECT ID_Ingrediente FROM Ingrediente ORDER BY ID_Ingrediente DESC LIMIT 1`);
-    let ingCounter = lastIng.length ? parseInt(lastIng[0].ID_Ingrediente.split('-')[1]) + 1 : 1;
+    const [lastIng] = await connection.query(
+      'SELECT ID_Ingrediente FROM Ingrediente ORDER BY ID_Ingrediente DESC LIMIT 1'
+    );
+    let ingCounter = lastIng.length ? 
+      parseInt(lastIng[0].ID_Ingrediente.split('-')[1]) + 1 : 1;
 
-    for (const ing of ingredientesParsed) {
+    for (const ing of ingredientes) {
       const idIng = `ING-${String(ingCounter++).padStart(4, '0')}`;
-      await db.query(`
-        INSERT INTO Ingrediente (ID_Ingrediente, ID_Receta, Nombre, Cantidad, Unidad_Medida)
-        VALUES (?, ?, ?, ?, ?)`,
-        [idIng, recetaId, ing.nombre, ing.cantidad, ing.unidad]);
+      await connection.query(
+        `INSERT INTO Ingrediente 
+         (ID_Ingrediente, ID_Receta, Nombre, Cantidad, Unidad_Medida)
+         VALUES (?, ?, ?, ?, ?)`,
+        [idIng, recetaId, ing.nombre, ing.cantidad, ing.unidad]
+      );
     }
-    console.log(`✅ ${ingredientesParsed.length} ingredientes insertados`);
 
     // Insertar Pasos
-    const [lastPaso] = await db.query(`SELECT ID_Paso FROM Paso ORDER BY ID_Paso DESC LIMIT 1`);
-    let pasoCounter = lastPaso.length ? parseInt(lastPaso[0].ID_Paso.split('-')[1]) + 1 : 1;
+    const [lastPaso] = await connection.query(
+      'SELECT ID_Paso FROM Paso ORDER BY ID_Paso DESC LIMIT 1'
+    );
+    let pasoCounter = lastPaso.length ? 
+      parseInt(lastPaso[0].ID_Paso.split('-')[1]) + 1 : 1;
 
-    for (const paso of pasosParsed) {
+    for (const paso of pasos) {
       const idPaso = `DIR-${String(pasoCounter++).padStart(6, '0')}`;
-      await db.query(`
-        INSERT INTO Paso (ID_Paso, RecetaID_Receta, Numero_Paso, Descripcion)
-        VALUES (?, ?, ?, ?)`,
-        [idPaso, recetaId, paso.numero, paso.descripcion]);
+      await connection.query(
+        `INSERT INTO Paso 
+         (ID_Paso, RecetaID_Receta, Numero_Paso, Descripcion)
+         VALUES (?, ?, ?, ?)`,
+        [idPaso, recetaId, paso.numero, paso.descripcion]
+      );
     }
-    console.log(`✅ ${pasosParsed.length} pasos insertados`);
 
     // Insertar Fotos
-    const [lastFoto] = await db.query(`SELECT ID_Foto FROM Foto ORDER BY ID_Foto DESC LIMIT 1`);
-    let fotoCounter = lastFoto.length ? parseInt(lastFoto[0].ID_Foto.split('-')[1]) + 1 : 1;
+    const imagenes = req.files || [];
+    const [lastFoto] = await connection.query(
+      'SELECT ID_Foto FROM Foto ORDER BY ID_Foto DESC LIMIT 1'
+    );
+    let fotoCounter = lastFoto.length ? 
+      parseInt(lastFoto[0].ID_Foto.split('-')[1]) + 1 : 1;
 
     for (const file of imagenes) {
       const idFoto = `FTO-${String(fotoCounter++).padStart(4, '0')}`;
       const url = `/img/recetas/${file.filename}`;
-      await db.query(`
-        INSERT INTO Foto (ID_Foto, ID_Receta, URL)
-        VALUES (?, ?, ?)`,
-        [idFoto, recetaId, url]);
+      await connection.query(
+        `INSERT INTO Foto 
+         (ID_Foto, ID_Receta, URL)
+         VALUES (?, ?, ?)`,
+        [idFoto, recetaId, url]
+      );
     }
-    console.log(`✅ ${imagenes.length} imágenes insertadas`);
 
-    res.status(201).json({ mensaje: 'Receta creada correctamente', id: recetaId });
+    await connection.commit();
+    res.status(201).json({ 
+      success: true,
+      message: 'Receta creada correctamente',
+      recetaId 
+    });
 
   } catch (error) {
-    console.error('❌ Error al crear la receta:', error);
-    res.status(500).json({ error: 'Error interno al crear la receta' });
+    await connection.rollback();
+    console.error('Error al crear receta:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Error al crear receta',
+      error: error.message 
+    });
+  } finally {
+    connection.release();
   }
 });
 
