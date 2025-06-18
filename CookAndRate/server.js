@@ -215,7 +215,7 @@ app.post('/find-user-by-id', async (req, res) => {
     } else if (user.Tipo_Usuario === 'critico') {
       const [criticos] = await pool.query('SELECT * FROM Critico WHERE ID_Usuario = ?', [userId]);
       responseData.critico = criticos[0];
-      console.log('Chef encontrado:', responseData.user);
+      // console.log('Chef encontrado:', responseData.user);
       responseData.icon = responseData.user.Imagen 
           ? `${baseUrl}/img/userIcons/${responseData.user.Imagen}`
           : `${baseUrl}/img/userIcons/crticon.jpg`;
@@ -335,52 +335,395 @@ app.get('/top-3-recetas', async (req, res) => {
   }
 });
 
-// Recetas aleatorias
 // Ruta para obtener 10 recetas aleatorias
-app.get('/api/recetas-aleatorias', async (req, res) => {
+app.get('/read-recetas', async (req, res) => {
   try {
-    // Consulta para obtener 10 recetas aleatorias con información del chef
-    const query = `
+    // 1. Primero obtenemos las recetas básicas con info del chef
+    const recetasQuery = `
       SELECT 
-        r.*,
+        r.ID_Receta,
+        r.Titulo AS Titulo_Receta,
+        r.Descripcion,
+        r.Tiempo_Preparacion,
+        r.Dificultad,
+        r.Fecha_Publicacion AS Fecha_Creacion,
+        r.ID_Chef,
+        u.ID_Usuario,
         u.Nombre AS Chef_Nombre,
-        u.Ape_Pat AS Chef_Apellido,
-        u.imagen AS Chef_Imagen,
-        GROUP_CONCAT(f.URL) AS Imagenes
+        u.Ape_Pat AS Chef_ApellidoPaterno,
+        u.Ape_Mat AS Chef_ApellidoMaterno,
+        u.Email AS Chef_Email,
+        u.Imagen AS Chef_Imagen,
+        u.Tipo_Usuario,
+        u.Biografia AS Chef_Biografia
       FROM Receta r
       JOIN Chef c ON r.ID_Chef = c.ID_Chef
       JOIN Usuario u ON c.ID_Usuario = u.ID_Usuario
-      LEFT JOIN Foto f ON r.ID_Receta = f.ID_Receta
-      GROUP BY r.ID_Receta
       ORDER BY RAND()
-      LIMIT 10
     `;
 
-    const [recetas] = await pool.query(query);
+    const [recetas] = await pool.query(recetasQuery);
 
-    // Procesar los resultados
-    const resultados = recetas.map(receta => ({
-      ...receta,
-      Imagenes: receta.Imagenes ? receta.Imagenes.split(',') : [],
-      Chef: {
-        Nombre: receta.Chef_Nombre,
-        Apellido: receta.Chef_Apellido,
-        Imagen: receta.Chef_Imagen || 'default.png'
-      }
+    // 2. Para cada receta, obtenemos sus relaciones
+    const resultados = await Promise.all(recetas.map(async (receta) => {
+      // Obtener ingredientes
+      const [ingredientes] = await pool.query(
+        'SELECT Nombre, Cantidad, Unidad_Medida FROM Ingrediente WHERE ID_Receta = ?',
+        [receta.ID_Receta]
+      );
+
+      // Obtener pasos
+      const [pasos] = await pool.query(
+        'SELECT Numero_Paso, Descripcion FROM Paso WHERE RecetaID_Receta = ? ORDER BY Numero_Paso',
+        [receta.ID_Receta]
+      );
+
+      // Obtener imágenes
+      const [imagenes] = await pool.query(
+        'SELECT URL FROM Foto WHERE ID_Receta = ?',
+        [receta.ID_Receta]
+      );
+
+      // Obtener certificaciones del chef
+      const [certificaciones] = await pool.query(
+        'SELECT Nombre FROM Certificacion_Chef WHERE ID_Chef = ?',
+        [receta.ID_Chef]
+      );
+
+      // Obtener especialidades del chef
+      const [especialidades] = await pool.query(
+        'SELECT Nombre FROM Especialidad_Chef WHERE ID_Chef = ?',
+        [receta.ID_Chef]
+      );
+
+      // Estructurar los datos
+      return {
+        id: receta.ID_Receta,
+        titulo: receta.Titulo_Receta,
+        descripcion: receta.Descripcion,
+        tiempoPreparacion: receta.Tiempo_Preparacion,
+        dificultad: receta.Dificultad,
+        fechaCreacion: receta.Fecha_Creacion,
+        ingredientes: ingredientes.reduce((obj, item) => {
+          obj[item.Nombre] = item.Cantidad;
+          return obj;
+        }, {}),
+        pasos: pasos.map(paso => paso.Descripcion),
+        imagenes: imagenes.map(img => img.URL),
+        chef: {
+          id: receta.ID_Chef,
+          usuarioId: receta.ID_Usuario,
+          nombreCompleto: `${receta.Chef_Nombre} ${receta.Chef_ApellidoPaterno} ${receta.Chef_ApellidoMaterno}`.trim(),
+          nombre: receta.Chef_Nombre,
+          apellidoPaterno: receta.Chef_ApellidoPaterno,
+          apellidoMaterno: receta.Chef_ApellidoMaterno,
+          email: receta.Chef_Email,
+          imagen: receta.Chef_Imagen || 'cheficon.jpg',
+          tipoUsuario: receta.Tipo_Usuario,
+          biografia: receta.Chef_Biografia,
+        }
+      };
     }));
 
     res.json({
       success: true,
       recetas: resultados
     });
-    console.log('Recetas aleatorias obtenidas correctamente', resultados);
+
   } catch (error) {
-    console.error('Error al obtener recetas aleatorias:', error);
+    console.error('Error al obtener recetas:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener recetas'
+      message: 'Error al obtener recetas',
+      error: error.message
     });
   }
+});
+
+// Ruta para obtener interacciones
+app.get('/api/interacciones/:recetaId', async (req, res) => {
+  try {
+    const { recetaId } = req.params;
+    
+    const [result] = await pool.query(`
+      SELECT 
+        SUM(CASE WHEN Tipo = 'Me gusta' THEN 1 ELSE 0 END) as meGusta,
+        SUM(CASE WHEN Tipo = 'No me gusta' THEN 1 ELSE 0 END) as noMeGusta,
+        SUM(CASE WHEN Tipo = 'Me encanta' THEN 1 ELSE 0 END) as meEncanta
+      FROM Interacciones
+      WHERE RecetaID_Receta = ?
+    `, [recetaId]);
+    
+    res.json({
+      success: true,
+      interacciones: {
+        meGusta: result[0].meGusta || 0,
+        noMeGusta: result[0].noMeGusta || 0,
+        meEncanta: result[0].meEncanta || 0
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener interacciones'
+    });
+  }
+});
+
+// Ruta para OBTENER interacciones de una receta
+app.get('/get-interacciones/:recetaId', async (req, res) => {
+  try {
+    const { recetaId } = req.params;
+    // console.log('Receta ID:', recetaId);
+    // Obtener totales
+    const [totales] = await pool.query(`
+      SELECT 
+        SUM(CASE WHEN Tipo = 'Me gusta' THEN 1 ELSE 0 END) as meGusta,
+        SUM(CASE WHEN Tipo = 'No me gusta' THEN 1 ELSE 0 END) as noMeGusta,
+        SUM(CASE WHEN Tipo = 'Me encanta' THEN 1 ELSE 0 END) as meEncanta
+      FROM Interaccion
+      WHERE RecetaID_Receta = ?
+    `, [recetaId]);
+
+    // Obtener detalles de usuarios
+    const [usuarios] = await pool.query(`
+      SELECT 
+        UsuarioID_Usuario as userId,
+        Tipo,
+        RecetaID_Receta as recetaId
+      FROM Interaccion
+      WHERE RecetaID_Receta = ?
+    `, [recetaId]);
+    
+    res.json({
+      success: true,
+      interacciones: {
+        meGusta: totales[0].meGusta || 0,
+        noMeGusta: totales[0].noMeGusta || 0,
+        meEncanta: totales[0].meEncanta || 0,
+        usuarios: usuarios
+      }
+    });
+    // console.log('Interacciones obtenidas:', {
+    //   meGusta: totales[0].meGusta || 0,
+    //   noMeGusta: totales[0].noMeGusta || 0,
+    //   meEncanta: totales[0].meEncanta || 0,
+    //   usuarios
+    // });
+  } catch (error) {
+    console.error('Error al obtener interacciones:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener interacciones'
+    });
+  }
+});
+
+// Registrar interacciones
+app.post('/get-interacciones', async (req, res) => {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    
+    const { recetaId, tipo, usuarioId } = req.body;
+    // console.log('Datos recibidos:', { recetaId, tipo, usuarioId });
+
+    // 1. Generar nuevo ID - ordenar numéricamente, no alfabéticamente
+    const [ultimoId] = await connection.query(`
+      SELECT ID_Interaccion 
+      FROM Interaccion 
+      WHERE ID_Interaccion LIKE 'INT-%'
+      ORDER BY CAST(SUBSTRING(ID_Interaccion, 5) AS UNSIGNED) DESC 
+      LIMIT 1
+    `);
+    
+    // console.log('Último ID de interacción:', ultimoId);
+    
+    const nuevoNumero = ultimoId.length > 0 
+      ? parseInt(ultimoId[0].ID_Interaccion.split('-')[1]) + 1 
+      : 1;
+    const nuevoId = `INT-${String(nuevoNumero).padStart(4, '0')}`;
+    // console.log('Nuevo ID generado:', nuevoId);
+
+    const tipoA = {
+      'noMeGusta': 'No me gusta',
+      'meGusta': 'Me gusta',
+      'meEncanta': 'Me encanta'
+    };
+    // 2. Manejar interacción existente
+    const [existente] = await connection.query(
+      'SELECT ID_Interaccion, Tipo FROM Interaccion WHERE UsuarioID_Usuario = ? AND RecetaID_Receta = ?',
+      [usuarioId, recetaId]
+    );
+
+    if (existente.length > 0) {
+      if (existente[0].Tipo === tipoA[tipo]) {
+        await connection.query(
+          'DELETE FROM Interaccion WHERE ID_Interaccion = ?',
+          [existente[0].ID_Interaccion]
+        );
+      } else {
+        await connection.query(
+          'UPDATE Interaccion SET Tipo = ?, Fecha_interaccion = NOW() WHERE ID_Interaccion = ?',
+          [tipoA[tipo], existente[0].ID_Interaccion]
+        );
+      }
+    } else {
+      await connection.query(
+        'INSERT INTO Interaccion (ID_Interaccion, UsuarioID_Usuario, RecetaID_Receta, Tipo, Fecha_interaccion) VALUES (?, ?, ?, ?, NOW())',
+        [nuevoId, usuarioId, recetaId, tipoA[tipo]]
+      );
+      // console.log('Nueva interacción registrada:', nuevoId);
+    }
+
+    // 3. Obtener totales actualizados
+    const [totales] = await connection.query(`
+      SELECT 
+        SUM(CASE WHEN Tipo = 'Me encanta' THEN 1 ELSE 0 END) as meEncanta,
+        SUM(CASE WHEN Tipo = 'Me gusta' THEN 1 ELSE 0 END) as meGusta,
+        SUM(CASE WHEN Tipo = 'No me gusta' THEN 1 ELSE 0 END) as noMeGusta
+      FROM Interaccion
+      WHERE RecetaID_Receta = ?
+    `, [recetaId]);
+
+    await connection.commit();
+    
+    res.json({
+      success: true,
+      nuevoTotal: {
+        meEncanta: totales[0].meEncanta || 0,
+        meGusta: totales[0].meGusta || 0,
+        noMeGusta: totales[0].noMeGusta || 0
+      }
+    });
+
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error al registrar interacción:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al registrar interacción',
+      error: error.message
+    });
+  } finally {
+    connection.release();
+  }
+});
+
+// Ruta para obtener calificaciones de una receta
+app.get('/get-calificaciones/:recetaId', async (req, res) => {
+  try {
+    const { recetaId } = req.params;
+    
+    // Obtener todas las calificaciones para esta receta
+    const [calificaciones] = await pool.query(`
+      SELECT 
+        c.Calificacion,
+        c.ID_Receta AS recetaId,
+        ch.ID_Usuario AS userId
+      FROM Calificacion c
+      JOIN Receta r ON c.ID_Receta = r.ID_Receta
+      JOIN Chef ch ON r.ID_Chef = ch.ID_Chef
+      JOIN Usuario u ON ch.ID_Usuario = u.ID_Usuario
+      WHERE c.ID_Receta = ?
+    `, [recetaId]);
+
+    res.json({
+      success: true,
+      calificaciones: calificaciones
+    });
+    console.log('Calificaciones obtenidas:', calificaciones);
+  } catch (error) {
+    console.error('Error al obtener calificaciones:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al obtener calificaciones'
+    });
+  }
+});
+
+app.post('/guardar-calificacion', async (req, res) => {
+    const { recetaId, calificacion, usuarioId } = req.body;
+
+    // Validación básica
+    if (!recetaId || !usuarioId || calificacion < 1 || calificacion > 5) {
+        return res.status(400).json({ 
+            success: false,
+            message: 'Datos inválidos' 
+        });
+    }
+
+    try {
+        // Verificar si ya existe una calificación del usuario
+        const [existente] = await pool.query(
+            `SELECT c.* 
+             FROM Calificacion c
+             JOIN Receta r ON c.ID_Receta = r.ID_Receta
+             JOIN Chef ch ON r.ID_Chef = ch.ID_Chef
+             WHERE c.ID_Receta = ? AND ch.ID_Usuario = ?`, 
+            [recetaId, usuarioId]
+        );
+
+        if (existente.length > 0) {
+            // Actualizar calificación existente
+            await pool.query(
+                `UPDATE Calificacion c
+                 JOIN Receta r ON c.ID_Receta = r.ID_Receta
+                 JOIN Chef ch ON r.ID_Chef = ch.ID_Chef
+                 SET c.Calificacion = ?, 
+                     c.fecha = NOW() 
+                 WHERE c.ID_Receta = ? AND ch.ID_Usuario = ?`,
+                [calificacion, recetaId, usuarioId]
+            );
+        } else {
+            // Crear nueva calificación
+            // Primero necesitamos obtener el ID_Chef asociado al usuario que califica
+            const [chef] = await pool.query(
+                `SELECT ID_Chef FROM Chef WHERE ID_Usuario = ?`,
+                [usuarioId]
+            );
+            
+            if (chef.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Usuario no tiene perfil de chef'
+                });
+            }
+
+            await pool.query(
+                `INSERT INTO Calificacion 
+                 (ID_Receta, ID_Chef, Calificacion, fecha) 
+                 VALUES (?, ?, ?, NOW())`,
+                [recetaId, chef[0].ID_Chef, calificacion]
+            );
+        }
+
+        // Obtener las calificaciones actualizadas
+        const [calificacionesActualizadas] = await pool.query(`
+            SELECT 
+                c.Calificacion,
+                c.ID_Receta AS recetaId,
+                ch.ID_Usuario AS userId
+            FROM Calificacion c
+            JOIN Receta r ON c.ID_Receta = r.ID_Receta
+            JOIN Chef ch ON r.ID_Chef = ch.ID_Chef
+            JOIN Usuario u ON ch.ID_Usuario = u.ID_Usuario
+            WHERE c.ID_Receta = ?
+        `, [recetaId]);
+
+        res.json({ 
+            success: true,
+            calificaciones: calificacionesActualizadas,
+            message: 'Calificación guardada exitosamente'
+        });
+
+    } catch (error) {
+        console.error('Error en /guardar-calificacion:', error);
+        res.status(500).json({ 
+            success: false,
+            message: 'Error en el servidor al guardar calificación' 
+        });
+    }
 });
 
 // Iniciar servidor
