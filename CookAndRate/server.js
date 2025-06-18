@@ -47,8 +47,12 @@ const userIconsStorage = multer.diskStorage({
     cb(null, userIconsDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, 'user-' + uniqueSuffix + path.extname(file.originalname));
+    // Espera a que esté disponible req.body.userId
+    const userId = req.body.userId;
+
+    const extension = path.extname(file.originalname);
+    const customName = `${userId}${extension}`;
+    cb(null, customName);
   }
 });
 
@@ -109,7 +113,7 @@ function createDefaultImages() {
     // Aquí podrías copiar una imagen por defecto o crearla
   }
 }
-
+const uploadRecetaImgs = multer({ storage: recetasStorage });
 // Llamar la función al iniciar
 createDefaultImages();
 
@@ -245,18 +249,27 @@ app.post('/api/upload-user-icon', uploadUserIcon.single('userIcon'), async (req,
     }
 
     const { userId } = req.body;
-    const imageUrl = `/img/userIcons/${req.file.filename}`;
+    const filename = req.file.filename; // esto ahora es igual a `${userId}.ext`
+    const fileExtension = path.extname(filename);
+    const imageUrl = `${userId}${fileExtension}`; // URL de la imagen
+    console.log('Imagen subida:', imageUrl);
+    // Actualizar campo Imagen en la BD con el nuevo nombre (userId + extensión)
+    await pool.query('UPDATE Usuario SET Imagen = ? WHERE ID_Usuario = ?', [imageUrl, userId]);
 
     res.json({
       success: true,
-      imageUrl: imageUrl,
-      filename: req.file.filename,
+      imageUrl,
+      filename,
       message: 'Imagen de usuario subida correctamente'
     });
   } catch (error) {
+    console.error('Error al subir la imagen:', error);
     res.status(500).json({ error: 'Error al subir la imagen de usuario' });
   }
 });
+
+
+
 
 // Ruta para subir imagen de receta
 app.post('/api/upload-receta-image', uploadRecetaImage.single('recetaImage'), async (req, res) => {
@@ -724,6 +737,347 @@ app.post('/guardar-calificacion', async (req, res) => {
             message: 'Error en el servidor al guardar calificación' 
         });
     }
+});
+
+app.get('/estadisticas-seguimiento/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        // Consulta para contar seguidores (quienes siguen al usuario)
+        const [seguidores] = await pool.query(
+            `SELECT COUNT(*) AS totalSeguidores 
+             FROM Seguidor 
+             WHERE ID_Seguido = ?`,
+            [userId]
+        );
+
+        // Consulta para contar seguidos (a quienes sigue el usuario)
+        const [seguidos] = await pool.query(
+            `SELECT COUNT(*) AS totalSeguidos 
+             FROM Seguidor 
+             WHERE ID_Seguidor = ?`,
+            [userId]
+        );
+
+        res.json({
+            success: true,
+            estadisticas: {
+                seguidores: seguidores[0].totalSeguidores || 0,
+                seguidos: seguidos[0].totalSeguidos || 0
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al obtener estadísticas de seguimiento:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener estadísticas de seguimiento'
+        });
+    }
+});
+
+// Ruta para verificar si el email ya existe
+app.post('/checkEmail', async (req, res) => {
+  console.log('checkEmail endpoint hit');
+  try {
+    const { email } = req.body;
+
+    const [users] = await pool.query('SELECT * FROM Usuario WHERE Email = ?', [email]);
+
+    if (users.length > 0) {
+      return res.json({ exists: true });
+    }
+
+    res.json({ exists: false });
+  } catch (error) {
+    console.error('Error en check-email:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+
+function generarNuevoID(resultados, prefijo, longitud = 4) {
+    if (resultados.length === 0) return `${prefijo}${'1'.padStart(longitud, '0')}`;
+    const ultimosNumeros = resultados.map(r => parseInt(r.id.split('-')[1], 10));
+    const nuevo = Math.max(...ultimosNumeros) + 1;
+    return `${prefijo}${String(nuevo).padStart(longitud, '0')}`;
+}
+
+async function obtenerNuevoIDPersonalizado(tabla, campo, prefijo) {
+    const [rows] = await db.query(`SELECT ${campo} AS id FROM ${tabla} ORDER BY ${campo} DESC`);
+    return generarNuevoID(rows, prefijo);
+}
+
+app.post('/register-user', async (req, res) => {
+  const conn = await pool.getConnection();
+  await conn.beginTransaction();
+
+  try {
+    const {
+      nombre,
+      apellidoP,
+      apellidoM,
+      email,
+      contrasena,
+      tipoUsuario,
+      biografia,
+      specialties = [],
+      certifications = []
+    } = req.body;
+
+    let tipoUsuarioN, nivelUsuario;
+
+  switch (tipoUsuario.toLowerCase()) {
+    case 'chefpro':
+      tipoUsuarioN = 'chef';
+      nivelUsuario = 'profesional';
+      break;
+    case 'chefaf':
+      tipoUsuarioN = 'chef';
+      nivelUsuario = 'amateur';
+      break;
+    case 'critico':
+      tipoUsuarioN = 'critico';
+      nivelUsuario = 'profesional';
+      break;
+    default:
+      tipoUsuarioN = 'critico';
+      nivelUsuario = 'amateur';
+      break;
+  }
+
+    // Función para generar nuevo ID
+    const obtenerNuevoID = async (tabla, campo, prefijo, connRef) => {
+      const [rows] = await connRef.query(`SELECT ${campo} AS id FROM ${tabla} ORDER BY ${campo} DESC LIMIT 1`);
+      if (rows.length === 0) return `${prefijo}0001`;
+      const numero = parseInt(rows[0].id.split('-')[1]) + 1;
+      return `${prefijo}${String(numero).padStart(4, '0')}`;
+    };
+
+    const nuevoIdUsuario = await obtenerNuevoID('Usuario', 'ID_Usuario', 'USR-', conn);
+
+    // Insertar en Usuario
+    const fechaRegistro = new Date();
+    await conn.query(`
+      INSERT INTO Usuario 
+      (ID_Usuario, Nombre, Ape_Pat, Ape_Mat, Email, Password, Tipo_Usuario, Biografia, Fecha_Registro, Estado, Imagen) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+        nuevoIdUsuario,
+        nombre,
+        apellidoP,
+        apellidoM,
+        email,
+        contrasena,
+        tipoUsuarioN,
+        biografia,
+        fechaRegistro,
+        1,
+        null
+    ]);
+    console.log('Usuario registrado con ID:', tipoUsuarioN);
+    if (tipoUsuarioN === 'critico') {
+      console.log('Registrando como crítico:', tipoUsuarioN);
+      const nuevoIdCritico = await obtenerNuevoID('Critico', 'ID_Critico', 'CRT-', conn);
+
+      await conn.query(`
+        INSERT INTO Critico (ID_Usuario, ID_Critico, Tipo) 
+        VALUES (?, ?, ?)`, [nuevoIdUsuario, nuevoIdCritico, nivelUsuario]); // nivel = amateur o profesional
+
+      console.log(specialties, 'especialidades');
+      console.log(certifications, 'certificaciones');
+      for (const esp of specialties) {
+        const nuevoIdEsp = await obtenerNuevoID('Especialidad_Critico', 'ID_Especialidad', 'SPC-', conn);
+        await conn.query(`
+          INSERT INTO Especialidad_Critico (ID_Especialidad, ID_Critico, Nombre) 
+          VALUES (?, ?, ?)`, [nuevoIdEsp, nuevoIdCritico, esp]);
+      }
+
+      for (const cert of certifications) {
+        const nuevoIdCert = await obtenerNuevoID('Certificacion_Critico', 'ID_Certificacion', 'CERT-', conn);
+        await conn.query(`
+          INSERT INTO Certificacion_Critico (ID_Certificacion, ID_Critico, Nombre, Institucion, Fecha_Obtencion) 
+          VALUES (?, ?, ?, ?, ?)`, [
+            nuevoIdCert,
+            nuevoIdCritico,
+            cert.nombre,
+            cert.institucion || 'Institución no especificada',
+            cert.fecha_obtencion || new Date()
+        ]);
+      }
+
+    } else if (tipoUsuarioN === 'chef') {
+      const nuevoIdChef = await obtenerNuevoID('Chef', 'ID_Chef', 'CHF-', conn);
+
+      await conn.query(`
+        INSERT INTO Chef (ID_Usuario, ID_Chef, Tipo, Rating_Promedio) 
+        VALUES (?, ?, ?, ?)`, [nuevoIdUsuario, nuevoIdChef, nivelUsuario, 1.0]);
+        console.log('Chef registrado con ID:', nuevoIdChef);    
+        console.log(specialties, 'especialidades');
+      console.log(certifications, 'certificaciones');
+      for (const esp of specialties) {
+        console.log('Registrando especialidad:', esp);
+        const nuevoIdEsp = await obtenerNuevoID('Especialidad_Chef', 'ID_Especialidad', 'SPC-', conn);
+        await conn.query(`
+          INSERT INTO Especialidad_Chef (ID_Especialidad, ID_Chef, Nombre) 
+          VALUES (?, ?, ?)`, [nuevoIdEsp, nuevoIdChef, esp]);
+      }
+
+      for (const cert of certifications) {
+        console.log('Registrando certificación:', cert);
+        const nuevoIdCert = await obtenerNuevoID('Certificacion_Chef', 'ID_Certificacion', 'CERT-', conn);
+        await conn.query(`
+          INSERT INTO Certificacion_Chef (ID_Certificacion, ID_Chef, Nombre, Institucion, Fecha_Obtencion) 
+          VALUES (?, ?, ?, ?, ?)`, [
+            nuevoIdCert,
+            nuevoIdChef,
+            cert.nombre || 'Institución no especificada',
+            cert.institucion || 'Institución no especificada',
+            cert.fecha_obtencion || new Date()
+        ]);
+      }
+    }
+
+    await conn.commit();
+    res.json({ success: true, userId: nuevoIdUsuario });
+
+  } catch (error) {
+    await conn.rollback();
+    console.error('Error al registrar usuario:', error);
+    res.status(500).json({ error: 'Error al registrar usuario' });
+  } finally {
+    conn.release();
+  }
+});
+
+app.post('/update-user', async (req, res) => {
+  try {
+    const { userId, nombre, apellidoP, apellidoM, email, biografia } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'Falta el ID de usuario' });
+    }
+
+    // Actualiza los campos
+    await pool.query(`
+      UPDATE Usuario
+      SET Nombre = ?, Ape_Pat = ?, Ape_Mat = ?, Email = ?, Biografia = ?
+      WHERE ID_Usuario = ?
+    `, [nombre, apellidoP, apellidoM, email, biografia, userId]);
+
+    // Consulta los datos actualizados
+    const [rows] = await pool.query(`
+      SELECT ID_Usuario, Nombre, Ape_Pat, Ape_Mat, Email, Biografia, Imagen
+      FROM Usuario
+      WHERE ID_Usuario = ?
+    `, [userId]);
+
+    const updatedUser = rows[0];
+
+    res.json({
+      success: true,
+      user: updatedUser
+    });
+
+  } catch (error) {
+    console.error('Error en /update-user:', error);
+    res.status(500).json({ success: false, message: 'Error al actualizar el usuario' });
+  }
+});
+
+app.post('/deactivate-account', async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ success: false, message: 'ID de usuario no proporcionado.' });
+  }
+
+  try {
+    // Establece Estado = 0 (inactivo)
+    const [result] = await pool.query('UPDATE Usuario SET Estado = 0 WHERE ID_Usuario = ?', [userId]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Usuario no encontrado.' });
+    }
+
+    res.json({ success: true, message: 'Cuenta desactivada correctamente.' });
+  } catch (error) {
+    console.error('Error al desactivar la cuenta:', error);
+    res.status(500).json({ success: false, message: 'Error interno al desactivar la cuenta.' });
+  }
+});
+
+
+app.post('/api/create-recipe', uploadRecetaImgs.array('imagenes', 10), async (req, res) => {
+  try {
+    const { descripcion, dificultad, ingredientes, pasos, tiempoPreparacion, titulo } = req.body;
+    const imagenes = req.files;
+    const chefId = 'CHF-0015'; // En producción obtén esto del usuario autenticado
+    const fechaPublicacion = new Date().toISOString().split('T')[0];
+
+    // Convertir JSON si vienen como strings
+    const ingredientesParsed = typeof ingredientes === 'string' ? JSON.parse(ingredientes) : ingredientes;
+    const pasosParsed = typeof pasos === 'string' ? JSON.parse(pasos) : pasos;
+
+    // Obtener nuevo ID de receta
+    const [lastReceta] = await db.query(`SELECT ID_Receta FROM Receta ORDER BY ID_Receta DESC LIMIT 1`);
+    const nextRecetaNum = lastReceta.length ? parseInt(lastReceta[0].ID_Receta.split('-')[1]) + 1 : 1;
+    const recetaId = `REC-${String(nextRecetaNum).padStart(4, '0')}`;
+    console.log(`📝 Nuevo ID de Receta: ${recetaId}`);
+
+    // Insertar Receta
+    await db.query(`
+      INSERT INTO Receta (ID_Receta, ID_Chef, Titulo, Descripcion, Tiempo_Preparacion, Dificultad, Fecha_Publicacion)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [recetaId, chefId, titulo, descripcion, tiempoPreparacion, dificultad, fechaPublicacion]);
+
+    console.log('✅ Receta insertada');
+
+    // Insertar Ingredientes
+    const [lastIng] = await db.query(`SELECT ID_Ingrediente FROM Ingrediente ORDER BY ID_Ingrediente DESC LIMIT 1`);
+    let ingCounter = lastIng.length ? parseInt(lastIng[0].ID_Ingrediente.split('-')[1]) + 1 : 1;
+
+    for (const ing of ingredientesParsed) {
+      const idIng = `ING-${String(ingCounter++).padStart(4, '0')}`;
+      await db.query(`
+        INSERT INTO Ingrediente (ID_Ingrediente, ID_Receta, Nombre, Cantidad, Unidad_Medida)
+        VALUES (?, ?, ?, ?, ?)`,
+        [idIng, recetaId, ing.nombre, ing.cantidad, ing.unidad]);
+    }
+    console.log(`✅ ${ingredientesParsed.length} ingredientes insertados`);
+
+    // Insertar Pasos
+    const [lastPaso] = await db.query(`SELECT ID_Paso FROM Paso ORDER BY ID_Paso DESC LIMIT 1`);
+    let pasoCounter = lastPaso.length ? parseInt(lastPaso[0].ID_Paso.split('-')[1]) + 1 : 1;
+
+    for (const paso of pasosParsed) {
+      const idPaso = `DIR-${String(pasoCounter++).padStart(6, '0')}`;
+      await db.query(`
+        INSERT INTO Paso (ID_Paso, RecetaID_Receta, Numero_Paso, Descripcion)
+        VALUES (?, ?, ?, ?)`,
+        [idPaso, recetaId, paso.numero, paso.descripcion]);
+    }
+    console.log(`✅ ${pasosParsed.length} pasos insertados`);
+
+    // Insertar Fotos
+    const [lastFoto] = await db.query(`SELECT ID_Foto FROM Foto ORDER BY ID_Foto DESC LIMIT 1`);
+    let fotoCounter = lastFoto.length ? parseInt(lastFoto[0].ID_Foto.split('-')[1]) + 1 : 1;
+
+    for (const file of imagenes) {
+      const idFoto = `FTO-${String(fotoCounter++).padStart(4, '0')}`;
+      const url = `/img/recetas/${file.filename}`;
+      await db.query(`
+        INSERT INTO Foto (ID_Foto, ID_Receta, URL)
+        VALUES (?, ?, ?)`,
+        [idFoto, recetaId, url]);
+    }
+    console.log(`✅ ${imagenes.length} imágenes insertadas`);
+
+    res.status(201).json({ mensaje: 'Receta creada correctamente', id: recetaId });
+
+  } catch (error) {
+    console.error('❌ Error al crear la receta:', error);
+    res.status(500).json({ error: 'Error interno al crear la receta' });
+  }
 });
 
 // Iniciar servidor
